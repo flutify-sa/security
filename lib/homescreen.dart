@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,6 +59,33 @@ class HomeScreenState extends State<HomeScreen> {
       Placemark placemark = placemarks.first;
       String fullAddress =
           '${placemark.street}, ${placemark.locality}, ${placemark.subAdministrativeArea}, ${placemark.administrativeArea}, ${placemark.country}';
+
+      // Send the data to Supabase (insert into emergency_reports table)
+      final supabase = Supabase.instance.client;
+      final response = await supabase.from('emergency_reports').insert([
+        {
+          'name':
+              _noteController.text.isNotEmpty
+                  ? _noteController.text
+                  : 'Anonymous', // Name field (if provided, otherwise 'Anonymous')
+          'coordinates':
+              '${position.latitude}, ${position.longitude}', // Coordinates in text format
+          'address': fullAddress, // Full address
+          'status': 'Emergency Mode', // Status
+          'created_at': DateTime.now().toIso8601String(), // Current timestamp
+        },
+      ]);
+
+      // Check if the response is valid
+      if (response != null && response.error != null) {
+        // Handle the error
+      } else if (response != null) {
+        // Success: Data sent to Supabase successfully
+      } else {
+        // Handle case where response is null
+      }
+
+      // Update UI
       setState(() {
         _status = 'Emergency Mode';
         _coordinates =
