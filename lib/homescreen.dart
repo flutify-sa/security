@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart'; // Import geocoding package
+import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,77 +12,66 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  String _status = 'Safe'; // Tracks the safety status
-  Color _buttonColor = Colors.green; // Button color when safe
-  String _address = ''; // To store the full address
-  String _coordinates = ''; // To store the coordinates
-  final TextEditingController _noteController =
-      TextEditingController(); // Controller for the TextField
-  String _savedNote = ''; // To store the saved note
+  String _status = 'Safe';
+  Color _buttonColor = Colors.green;
+  String _address = '';
+  String _coordinates = '';
+  final TextEditingController _noteController = TextEditingController();
+  String _savedNote = '';
 
   @override
   void initState() {
     super.initState();
-    _loadSavedNote(); // Load the saved note when the app starts
+    _loadSavedNote();
   }
 
-  // Load saved note from Shared Preferences
   void _loadSavedNote() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _savedNote =
-          prefs.getString('note') ?? ''; // Load the note or set to empty
-      _noteController.text = _savedNote; // Set the controller's text
+      _savedNote = prefs.getString('note') ?? '';
+      _noteController.text = _savedNote;
     });
   }
 
-  // Save note to Shared Preferences
   void _saveNote() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('note', _noteController.text); // Save the note
+    await prefs.setString('note', _noteController.text);
     setState(() {
-      _savedNote = _noteController.text; // Update the saved note
+      _savedNote = _noteController.text;
     });
   }
 
-  // Panic Button Handler
   void _triggerPanicButton() async {
-    // Check location permission before accessing the device's location
     var permissionStatus = await Permission.location.request();
     if (permissionStatus.isGranted) {
       // Using LocationSettings to get the position
       var position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
           accuracy: LocationAccuracy.high,
-          distanceFilter:
-              10, // Minimum distance (in meters) before location updates
+          distanceFilter: 10,
         ),
       );
-
-      // Reverse geocoding to get the full address from coordinates
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-
-      // Get the first Placemark and extract the address details
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
       Placemark placemark = placemarks.first;
       String fullAddress =
           '${placemark.street}, ${placemark.locality}, ${placemark.subAdministrativeArea}, ${placemark.administrativeArea}, ${placemark.country}';
-
-      // Update the status to include location and address
       setState(() {
-        _status = 'Emergency Mode'; // Update status to Emergency Mode
+        _status = 'Emergency Mode';
         _coordinates =
-            'Coordinates: ${position.latitude}, ${position.longitude}'; // Save coordinates
-        _address = fullAddress; // Save the full address
-        _buttonColor = Colors.red; // Change button color to red
+            'Coordinates: ${position.latitude}, ${position.longitude}';
+        _address = fullAddress;
+        _buttonColor = Colors.red;
       });
     } else {
       // Handle permission denied (optional)
       setState(() {
         _status = 'Location Permission Denied';
-        _address = ''; // Clear address if permission is denied
-        _coordinates = ''; // Clear coordinates if permission is denied
-        _buttonColor = Colors.grey; // Change button color to grey
+        _address = '';
+        _coordinates = '';
+        _buttonColor = Colors.grey;
       });
     }
   }
@@ -91,8 +80,8 @@ class HomeScreenState extends State<HomeScreen> {
   void _resetStatus() {
     setState(() {
       _status = 'Safe';
-      _address = ''; // Clear address when resetting
-      _coordinates = ''; // Clear coordinates when resetting
+      _address = '';
+      _coordinates = '';
       _buttonColor = Colors.green;
     });
   }
@@ -100,28 +89,19 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Colors.black87, // Dark background for a high-contrast look
+      backgroundColor: Colors.black87,
       appBar: AppBar(
         title: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween, // Spread out the children
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Flexible(
               child: Text(
                 'Women’s Security App',
-                style: TextStyle(
-                  fontSize: 18,
-                ),
-                overflow:
-                    TextOverflow.ellipsis, // Ensure the text doesn't overflow
+                style: TextStyle(fontSize: 18),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            Image.asset(
-              'assets/helmet.png',
-              height: 50,
-              // width: 40, // Optional, adjust width if needed
-            ),
+            Image.asset('assets/helmet.png', height: 50),
           ],
         ),
         backgroundColor: Colors.black87,
@@ -138,8 +118,7 @@ class HomeScreenState extends State<HomeScreen> {
               children: <Widget>[
                 // TextField for notes
                 Visibility(
-                  visible: _status !=
-                      'Emergency Mode', // Hide when in Emergency Mode
+                  visible: _status != 'Emergency Mode',
                   child: Row(
                     children: [
                       Expanded(
@@ -160,14 +139,12 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                       IconButton(
                         icon: Icon(Icons.check, color: Colors.green),
-                        onPressed: _saveNote, // Save note when pressed
+                        onPressed: _saveNote,
                       ),
                     ],
                   ),
                 ),
                 SizedBox(height: 20),
-
-                // Safety status display
                 Center(
                   child: Text(
                     'Current Status:\n $_status',
@@ -218,33 +195,23 @@ class HomeScreenState extends State<HomeScreen> {
                 // Optional Status Indicator
                 AnimatedSwitcher(
                   duration: Duration(seconds: 1),
-                  child: _status == 'Safe'
-                      ? Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 80,
-                        )
-                      : Icon(
-                          Icons.error,
-                          color: Colors.red,
-                          size: 80,
-                        ),
+                  child:
+                      _status == 'Safe'
+                          ? Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 80,
+                          )
+                          : Icon(Icons.error, color: Colors.red, size: 80),
                 ),
                 SizedBox(height: 10),
-
-                // Additional instructions or actions
                 Text(
                   _status == 'Safe'
                       ? 'Stay safe, always be aware!'
                       : 'Help is on the way!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
-
-                // Display the full address and coordinates in the same section
                 if (_address.isNotEmpty && _coordinates.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 20.0),
@@ -253,25 +220,17 @@ class HomeScreenState extends State<HomeScreen> {
                         Text(
                           'Address:\n$_address',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 18),
                         ),
                         SizedBox(height: 10),
                         Text(
-                          _coordinates, // Display coordinates here
+                          _coordinates,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 18),
                         ),
                       ],
                     ),
                   ),
-
-                // Show Reset Button when the status is Emergency Mode
                 Visibility(
                   visible: _status == 'Emergency Mode',
                   child: Padding(
@@ -280,15 +239,14 @@ class HomeScreenState extends State<HomeScreen> {
                       onPressed: _resetStatus,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green, // Button color
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 15,
+                        ),
                       ),
                       child: Text(
                         'Reset to Safe',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
+                        style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
                   ),
